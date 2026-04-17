@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>GymLog Pro</title>
-  <meta name="theme-color" content="#0b0e14">
+  <title>GymLog</title>
+  <meta name="theme-color" content="#9bbc0f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,267 +13,626 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* ═══════════════════════════════════════════════
-       MODERN CYBER DESIGN SYSTEM
-       ═══════════════════════════════════════════════ */
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --bg: #0b0e14;
-      --surface: rgba(23, 28, 36, 0.7);
-      --surface-bright: rgba(35, 41, 50, 0.85);
-      --primary: #00e5ff; /* Bright Cyan */
-      --primary-glow: rgba(0, 229, 255, 0.4);
-      --accent: #4fa3ff; /* Electric Blue */
-      --text: #f0f6fc;
-      --text-dim: #8b949e;
-      --border: rgba(255, 255, 255, 0.08);
-      --danger: #ff4d4d;
-      --success: #2ecc71;
-      --blur: blur(16px);
-    }
+      /* Game Boy DMG palette */
+      --gb-lightest: #9bbc0f;
+      --gb-light:    #8bac0f;
+      --gb-dark:     #306230;
+      --gb-darkest:  #0f380f;
 
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      -webkit-tap-highlight-color: transparent; 
-      font-family: 'Inter', -apple-system, sans-serif;
+      --bg:       var(--gb-lightest);
+      --surface:  rgba(139,172,15,0.55);
+      --surface2: rgba(15,56,15,0.06);
+      --surface3: var(--gb-dark);
+      --border:   rgba(15,56,15,0.3);
+      --border2:  rgba(15,56,15,0.55);
+      --text:     var(--gb-darkest);
+      --text2:    rgba(15,56,15,0.72);
+      --text3:    rgba(15,56,15,0.5);
+      --accent:       var(--gb-darkest);
+      --accent-glow:  rgba(15,56,15,0.45);
+      --accent-dark:  var(--gb-dark);
+      --green:  var(--gb-dark);
+      --red:    #7d1a1a;
+      --orange: #8b5a1a;
+      --dot-font:  'Press Start 2P', monospace;
+      --body-font: 'Press Start 2P', monospace;
+      --nav-h: 62px;
+      --header-h: 56px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
-
+    html, body {
+      height: 100%; height: 100dvh;
+      overflow: hidden;
+    }
     body {
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 50% -20%, rgba(0, 229, 255, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 0% 100%, rgba(79, 163, 255, 0.08) 0%, transparent 40%);
-      background-attachment: fixed;
+      background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
+      font-family: var(--body-font);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ── GAME BOY LCD TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(15,56,15,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,56,15,0.07) 1px, transparent 1px);
+      background-size: 4px 4px;
+    }
+    body > * { position: relative; z-index: 1; }
+    /* faint LCD edge darkening */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 120% 120% at 50% 50%,
+        transparent 65%, rgba(15,56,15,0.10) 100%);
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
       flex-direction: column;
+      height: calc(100dvh - var(--nav-h));
+      overflow: hidden;
     }
+    .screen.active { display: flex; }
 
-    .container { 
-      max-width: 500px; 
-      margin: 0 auto; 
-      padding: 20px; 
-      padding-bottom: 120px; 
-      width: 100%;
+    /* ── SCREEN HEADER ── */
+    .screen-header {
+      flex-shrink: 0;
+      background: rgba(139,172,15,0.95);
+      border-bottom: 1px solid rgba(15,56,15,0.15);
+      padding: 0 16px;
+      height: var(--header-h);
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 10;
     }
-
-    header {
-      padding: 30px 0 20px 0;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 25px;
+    .screen-header h1 {
+      font-family: var(--dot-font);
+      font-size: 13px; font-weight: 400;
+      letter-spacing: 2px; text-transform: uppercase;
+      text-shadow: none;
     }
+    .header-sub { font-size: 9px; color: var(--text2); margin-top: 4px; font-family: var(--dot-font); letter-spacing: 0.5px; }
 
-    h1 { 
-      font-size: 1.8rem; 
-      font-weight: 800; 
-      letter-spacing: -0.03em;
-      background: linear-gradient(to right, #fff, var(--primary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    /* ── SCROLLABLE CONTENT ── */
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 80px;
     }
+    .screen-content::-webkit-scrollbar { display: none; }
 
-    .retro-font { 
-      font-family: 'Press Start 2P', cursive; 
-      font-size: 0.65rem; 
-      color: var(--primary); 
-      letter-spacing: 1px;
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-bottom));
+      background: rgba(139,172,15,0.97);
+      border-top: 2px solid var(--gb-darkest);
+      display: flex;
+      z-index: 100;
+      padding-bottom: var(--safe-bottom);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      background: none; border: none; color: var(--text2);
+      cursor: pointer; font-size: 8px; font-weight: 400;
+      transition: background 0.15s, color 0.15s; padding: 0;
+      font-family: var(--dot-font);
+      letter-spacing: 0.5px;
       text-transform: uppercase;
+      position: relative;
     }
+    .nav-btn.active { color: var(--gb-lightest); background: var(--gb-dark); }
+    .nav-btn.active svg { filter: none; }
+    .nav-btn svg { width: 22px; height: 22px; }
 
-    /* Cards */
-    .card {
-      background: var(--surface);
-      backdrop-filter: var(--blur);
-      -webkit-backdrop-filter: var(--blur);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-
-    /* Inputs */
-    input, select {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: #fff;
-      padding: 14px;
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.3s ease;
-      margin-top: 5px;
-    }
-
-    input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-
-    label {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      font-weight: 600;
-      margin-left: 4px;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 24px;
+    /* ── EXERCISE BLOCK (workout) ── */
+    .exercise-block {
+      background: rgba(139,172,15,0.97);
       border-radius: 14px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
-      gap: 10px;
-      font-size: 0.95rem;
+      margin: 10px 12px 0;
+      overflow: hidden;
+      border: 1px solid rgba(15,56,15,0.18);
+      box-shadow: 0 2px 24px rgba(15,56,15,0.32), inset 0 1px 0 rgba(15,56,15,0.06);
     }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #050505;
-      box-shadow: 0 4px 20px var(--primary-glow);
-      width: 100%;
-    }
-
-    .btn-primary:active { transform: scale(0.97); }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    /* Workout List Item */
-    .workout-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px;
-      background: var(--surface-bright);
-      border-radius: 16px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border);
-      transition: border-color 0.3s;
-    }
-    
-    .workout-item:hover {
-      border-color: var(--primary-glow);
-    }
-
-    /* Exercise & Set Layout */
-    .exercise-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
+    .ex-block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--border);
     }
+    .ex-block-name { font-size: 11px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 1px; line-height: 1.8; text-shadow:none; }
+    .ex-block-prev { font-size: 7px; color: var(--text3); margin-top: 6px; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 1.8; }
+    .btn-remove-ex {
+      background: none; border: none; color: var(--text3);
+      cursor: pointer; padding: 4px; flex-shrink: 0;
+      border-radius: 6px; transition: color 0.15s;
+    }
+    .btn-remove-ex:active { color: var(--red); }
 
+    /* ── SETS ── */
+    .sets-col-header {
+      display: grid;
+      grid-template-columns: 30px 1fr 1fr 86px;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 8px; font-weight: 400; font-family: var(--dot-font);
+      color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sets-col-header span:nth-child(2),
+    .sets-col-header span:nth-child(3) { text-align: center; }
     .set-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1.2fr auto;
-      gap: 12px;
+      grid-template-columns: 30px 1fr 1fr 86px;
+      gap: 6px;
+      padding: 6px 12px;
       align-items: center;
-      margin-bottom: 12px;
-      background: rgba(255,255,255,0.03);
-      padding: 10px;
-      border-radius: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .set-row:last-of-type { border-bottom: none; }
+    .set-num {
+      font-size: 10px; font-weight: 400; color: var(--text3);
+      font-family: var(--dot-font);
+      text-align: center;
+    }
+    .set-input {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px; font-weight: 500;
+      text-align: center;
+      padding: 7px 4px;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    .set-input:focus { outline: none; border-color: var(--accent); }
+    .btn-save-set {
+      background: var(--gb-dark);
+      color: var(--gb-lightest); border: 1.5px solid var(--gb-darkest); border-radius: 4px;
+      padding: 8px 0; font-size: 9px; font-weight: 400;
+      font-family: var(--dot-font); letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer; width: 100%;
+      transition: all 0.12s;
+    }
+    .btn-save-set:active { background: var(--gb-darkest); color: var(--gb-lightest); }
+    .set-row.saved .set-num { color: var(--accent); }
+    .set-row.saved .set-val {
+      text-align: center; font-size: 11px;
+      font-family: var(--dot-font); color: var(--text); letter-spacing: 0.5px;
+    }
+    .set-checkmark { color: var(--accent); font-size: 14px; font-family: var(--dot-font); text-align: center; }
+
+    .add-set-btn {
+      width: 100%; padding: 12px;
+      background: none; border: none;
+      border-top: 1px solid rgba(15,56,15,0.1);
+      color: var(--text3); font-size: 9px;
+      font-family: var(--dot-font); letter-spacing: 1px;
+      cursor: pointer; transition: color 0.15s;
+    }
+    .add-set-btn:active { color: var(--accent); }
+
+    /* ── BODYWEIGHT QUICK-TAP ── */
+    .bw-set-row {
+      display: grid;
+      grid-template-columns: 30px 1fr 86px;
+      gap: 6px; padding: 8px 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .bw-counter {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .bw-count {
+      font-family: var(--dot-font); font-size: 14px; color: var(--text);
+      line-height: 1; min-width: 48px; text-align: center;
+      text-shadow:none;
+    }
+    .bw-tap-btns {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; max-width: 200px;
+    }
+    .bw-tap-btn {
+      background: rgba(15,56,15,0.07); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text2);
+      font-size: 9px; font-weight: 400; font-family: var(--dot-font);
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.1s;
+      flex-shrink: 0;
+    }
+    .bw-tap-btn:active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .bw-tap-btn.selected { background: var(--accent); border-color: var(--accent); color: var(--bg); box-shadow: 0 0 8px var(--accent-glow); }
+    .bw-total-bar {
+      padding: 10px 14px;
+      font-family: var(--dot-font); font-size: 10px;
+      color: var(--accent); letter-spacing: 1.5px;
+      border-top: 1px solid rgba(15,56,15,0.1);
+      text-align: center;
     }
 
-    /* FAB */
-    #fab {
+    /* ── WEIGHT/REP STEPPER ── */
+    .stepper {
+      display: flex; align-items: center; gap: 2px;
+    }
+    .stepper-btn {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.2);
+      color: var(--text2);
+      width: 30px; height: 36px; border-radius: 3px;
+      font-size: 10px; font-weight: 400;
+      font-family: var(--dot-font);
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.08s;
+      letter-spacing: 0;
+    }
+    .stepper-btn:active { background: rgba(15,56,15,0.18); border-color: var(--accent); color: var(--accent); }
+    .stepper-input {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.2);
+      border-radius: 3px; color: var(--text);
+      font-size: 9px; font-weight: 400;
+      font-family: var(--dot-font);
+      text-align: center; padding: 4px 1px;
+      width: 0; flex: 1; min-width: 0;
+      transition: border-color 0.15s;
+    }
+    .stepper-input:focus { outline: none; border-color: var(--accent); }
+    .stepper-input::placeholder { color: var(--text3); font-family: var(--dot-font); font-size: 10px; }
+
+    /* ── EXERCISE NOTE (in workout) ── */
+    .ex-note {
+      font-size: 7px; color: var(--accent); font-family: var(--dot-font);
+      margin-top: 6px; line-height: 2;
+    }
+
+    /* ── INCREMENT PILLS ── */
+    .inc-pills {
+      display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px;
+    }
+    .inc-pill {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.2);
+      border-radius: 3px; padding: 7px 12px;
+      font-size: 8px; font-weight: 400; font-family: var(--dot-font); color: var(--text2);
+      cursor: pointer; transition: all 0.12s; letter-spacing: 0.5px;
+    }
+    .inc-pill.active {
+      background: rgba(15,56,15,0.15); border-color: var(--accent); color: var(--accent);
+    }
+
+    /* ── NOTES TEXTAREA ── */
+    .form-textarea {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.18);
+      border-radius: 3px; color: var(--text); font-size: 9px;
+      padding: 11px 13px; width: 100%; resize: none; min-height: 72px;
+      font-family: var(--dot-font); line-height: 2; letter-spacing: 0.3px;
+    }
+    .form-textarea:focus { outline: none; border-color: var(--accent); }
+
+    /* ── EDIT BUTTON ── */
+    .btn-edit-ex {
+      background: none; border: none; color: var(--text2);
+      padding: 4px 8px; cursor: pointer; border-radius: 6px; font-size: 16px;
+    }
+    .btn-edit-ex:active { color: var(--accent); }
+
+    /* ── FAB ── */
+    .fab {
       position: fixed;
-      bottom: 30px;
-      right: 25px;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 10px 25px var(--primary-glow);
-      z-index: 100;
-      border: none;
+      bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px);
+      right: 16px;
+      width: 56px; height: 56px;
+      background: rgba(139,172,15,0.95);
+      color: var(--accent);
+      border: 1.5px solid var(--accent); border-radius: 4px;
+      font-size: 30px; font-weight: 300;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(15,56,15,0.35), 0 0 0 1px rgba(15,56,15,0.2);
+      z-index: 50;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fab:active { transform: scale(0.91); box-shadow: 0 2px 10px rgba(15,56,15,0.27); }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; padding: 48px 32px;
+      color: var(--text3); text-align: center;
+    }
+    .empty-state p { font-size: 15px; line-height: 1.6; }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,56,15,0.34);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: rgba(139,172,15,0.99);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 85vh;
+      display: flex; flex-direction: column;
+      padding-bottom: var(--safe-bottom);
+      animation: slideUp 0.25s ease;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 40px rgba(15,56,15,0.35);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 16px 13px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-header h2 { font-size: 12px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 1px; text-transform: uppercase; text-shadow: none; }
+    .btn-close {
+      background: rgba(15,56,15,0.06); border: 1px solid rgba(15,56,15,0.2); color: var(--text2);
+      width: 28px; height: 28px; border-radius: 3px;
+      font-size: 9px; font-family: var(--dot-font); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1; transition: all 0.12s; letter-spacing: 0;
+    }
+    .btn-close:active { background: rgba(15,56,15,0.18); color: var(--accent); border-color: var(--accent); }
+
+    /* ── EXERCISE PICKER ── */
+    .search-wrap { padding: 10px 14px; flex-shrink: 0; }
+    .search-input {
+      background: rgba(15,56,15,0.05);
+      border: 1px solid rgba(15,56,15,0.18);
+      border-radius: 3px;
+      color: var(--text);
+      font-size: 10px;
+      padding: 11px 13px;
+      width: 100%;
+      font-family: var(--dot-font); letter-spacing: 0.5px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+
+    .cat-pills {
+      display: flex; gap: 6px;
+      padding: 0 14px 10px;
+      overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+    }
+    .cat-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.18);
+      border-radius: 3px; padding: 6px 12px;
+      font-size: 8px; font-weight: 400; font-family: var(--dot-font); color: var(--text2);
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: all 0.12s; letter-spacing: 0.5px;
+    }
+    .pill.active {
+      background: rgba(15,56,15,0.12); border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .ex-list { overflow-y: auto; flex: 1; }
+    .ex-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px;
+      border-bottom: 1px solid rgba(15,56,15,0.1);
+      cursor: pointer;
+      transition: background 0.1s;
+      background: rgba(139,172,15,0.82);
+    }
+    .ex-list-item:active { background: rgba(15,56,15,0.08); }
+    .ex-list-item-name { font-size: 10px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 0.5px; line-height: 1.8; }
+    .ex-list-item-cat { font-size: 7px; color: var(--text3); margin-top: 4px; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 2; }
+    .ex-list-item-right { display: flex; align-items: center; gap: 8px; }
+    .ex-list { overflow-y: auto; flex: 1; background: rgba(139,172,15,0.75); }
+    .btn-del-ex {
+      background: none; border: none; color: var(--text3);
+      font-size: 16px; cursor: pointer; padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .btn-del-ex:active { color: var(--red); }
+
+    /* ── FORM ── */
+    .form-group { padding: 12px 16px; }
+    .form-label { font-size: 9px; color: var(--text2); margin-bottom: 10px; display: block; font-weight: 400; font-family: var(--dot-font); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input {
+      background: rgba(15,56,15,0.05); border: 1px solid rgba(15,56,15,0.18);
+      border-radius: 3px; color: var(--text); font-size: 10px;
+      padding: 12px 13px; width: 100%;
+      font-family: var(--dot-font); letter-spacing: 0.5px;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    select.form-input { -webkit-appearance: none; }
+    .btn-primary {
+      background: rgba(15,56,15,0.07); color: var(--accent); border: 1.5px solid rgba(15,56,15,0.3);
+      border-radius: 4px; padding: 13px; font-size: 10px;
+      font-weight: 400; font-family: var(--dot-font);
+      letter-spacing: 0.5px; text-transform: uppercase;
+      cursor: pointer; width: 100%;
+      transition: all 0.12s;
+    }
+    .btn-primary:active { background: rgba(15,56,15,0.18); }
+
+    /* ── HISTORY ── */
+    .history-item {
+      margin: 10px 12px 0;
+      background: rgba(139,172,15,0.88);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 2px 16px rgba(15,56,15,0.14);
+    }
+    .history-item-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; cursor: pointer;
+    }
+    .btn-copy-workout {
+      background: rgba(15,56,15,0.06); border: 1px solid rgba(15,56,15,0.2);
+      border-radius: 8px; color: var(--accent);
+      padding: 6px 12px; font-size: 10px; font-weight: 400;
+      font-family: var(--dot-font); letter-spacing: 0.5px; text-transform: uppercase; font-size: 7px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .btn-copy-workout:active { background: rgba(15,56,15,0.1); }
+    .history-date { font-size: 13px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 0.5px; }
+    .history-meta { font-size: 9px; color: var(--text2); margin-top: 6px; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 1.8; }
+    .history-chevron { color: var(--text3); transition: transform 0.2s; }
+    .history-chevron.open { transform: rotate(180deg); }
+    .history-detail {
+      border-top: 1px solid var(--border);
+      padding: 12px 14px;
+      display: none;
+    }
+    .history-detail.open { display: block; }
+    .history-ex { margin-bottom: 12px; }
+    .history-ex:last-child { margin-bottom: 0; }
+    .history-ex-name { font-size: 12px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 0.5px; margin-bottom: 5px; color: var(--accent); }
+    .history-set-row { font-size: 8px; color: var(--text3); padding: 4px 0; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 1.8; }
+    .history-set-row span { color: var(--text2); font-weight: 400; }
+
+    /* ── INLINE TIMER DISPLAY ── */
+    .timer-inline {
+      display: none; align-items: center; gap: 5px;
+      font-family: var(--dot-font); font-size: 16px; font-weight: 400;
+      color: var(--accent); letter-spacing: 2px; line-height: 1;
+      text-shadow:none;
       cursor: pointer;
     }
+    .timer-inline.active { display: flex; }
+    .timer-inline.done { color: var(--accent); text-shadow: 0 0 16px var(--accent-glow); animation: flashDone 0.5s ease 4; }
+    @keyframes flashDone { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* Modals */
-    .modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(10px);
+    /* ── TIMER SETTINGS MODAL ── */
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+    }
+    .setting-label { font-size: 10px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 0.5px; }
+    .setting-sub { font-size: 8px; color: var(--text3); margin-top: 6px; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 1.8; }
+    input[type=range] { width: 130px; accent-color: var(--accent); }
+    /* ── SLIDER OVERLAY ── */
+    #sliderOverlay {
+      position: fixed; left: 0; right: 0;
+      bottom: 0;
+      background: rgba(139,172,15,0.99);
+      border-top: 1px solid rgba(15,56,15,0.2);
+      border-bottom: none;
+      padding: 14px 18px 18px;
+      z-index: 9999;
       display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
+      box-shadow: 0 -4px 30px rgba(15,56,15,0.35);
+      transition: bottom 0.05s;
+    }
+    #sliderOverlay.visible { display: block; }
+    .slider-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .slider-label {
+      font-family: var(--dot-font); font-size: 9px;
+      color: var(--text3); letter-spacing: 1px;
+      text-transform: uppercase; min-width: 32px;
+    }
+    .slider-val {
+      font-family: var(--dot-font); font-size: 18px;
+      color: var(--text); min-width: 56px; text-align: right;
+      line-height: 1; text-shadow:none;
+    }
+    .slider-val span { font-size: 11px; color: var(--text3); margin-left: 2px; }
+    #sliderControl {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 2px;
+      background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct, 30%), rgba(15,56,15,0.12) var(--pct, 30%));
+      outline: none; cursor: pointer;
+    }
+    #sliderControl::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 22px; height: 22px; border-radius: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 0 2px rgba(15,56,15,0.15), 0 2px 8px rgba(15,56,15,0.35);
+      cursor: pointer;
+    }
+    #sliderControl::-moz-range-thumb {
+      width: 22px; height: 22px; border-radius: 2px; border: none;
+      background: var(--accent);
+      box-shadow: 0 0 0 2px rgba(15,56,15,0.15);
     }
 
-    .modal-content {
-      background: #161b22;
-      width: 100%;
-      max-width: 450px;
-      border-radius: 24px;
-      padding: 30px;
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    /* ── CATEGORY PICKER ── */
+    .cat-picker-item {
+      padding: 12px 14px;
+      font-size: 10px; font-family: var(--dot-font);
+      color: var(--text2); letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(15,56,15,0.08);
+      cursor: pointer; transition: all 0.1s;
+    }
+    .cat-picker-item:last-child { border-bottom: none; }
+    .cat-picker-item:active,
+    .cat-picker-item.selected { background: rgba(15,56,15,0.1); color: var(--accent); }
+
+    .toggle {
+      width: 44px; height: 26px; background: var(--surface3);
+      border-radius: 13px; position: relative; cursor: pointer;
+      border: none; transition: background 0.2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; background: var(--gb-lightest);
+      border: 1px solid var(--gb-darkest);
+      border-radius: 50%; top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(18px); }
+
+    /* ── FINISH WORKOUT BTN ── */
+    .btn-finish {
+      background: rgba(15,56,15,0.07); color: var(--accent);
+      border: 1.5px solid rgba(15,56,15,0.3); border-radius: 4px;
+      padding: 8px 16px; font-size: 9px; font-weight: 400;
+      font-family: var(--dot-font); letter-spacing: 0px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .btn-finish:active { background: rgba(15,56,15,0.18); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+      left: 50%; transform: translateX(-50%);
+      background: rgba(139,172,15,0.95); color: var(--text);
+      padding: 10px 20px; border-radius: 20px;
+      font-size: 11px; z-index: 999;
+      font-family: var(--dot-font); letter-spacing: 0.8px;
+      opacity: 0; transition: opacity 0.25s;
+      white-space: nowrap; pointer-events: none;
+      border: 1px solid rgba(15,56,15,0.15);
+      box-shadow: 0 4px 20px rgba(15,56,15,0.23);
     }
 
-    /* Timer */
-    #timerDisplay {
-      font-size: 4rem;
-      font-weight: 800;
-      text-align: center;
-      color: var(--primary);
-      text-shadow: 0 0 30px var(--primary-glow);
-      margin: 20px 0;
-      font-variant-numeric: tabular-nums;
+    /* ── TIMER BADGE ── */
+    .timer-icon-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text2); padding: 4px; border-radius: 8px;
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; transition: color 0.15s;
     }
-
-    /* Tabs / Nav (if needed) */
-    .view-header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    /* Motivation */
-    #motivationText {
-      font-family: 'Press Start 2P', cursive;
-      line-height: 2;
-      color: var(--primary);
-      text-align: center;
-      font-size: 0.85rem;
-      padding: 20px 0;
-    }
-
-    /* Stats & Charts */
-    .stat-box {
-      background: rgba(255,255,255,0.05);
-      padding: 15px;
-      border-radius: 14px;
-      text-align: center;
-    }
-    .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; }
-
-    /* Utilities */
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .mt-20 { margin-top: 20px; }
-    .hidden { display: none !important; }
-</style>
+    .timer-icon-btn:active { color: var(--accent); }
+    .timer-icon-btn svg { width: 22px; height: 22px; }
+  </style>
 </head>
 <body>
 
@@ -282,15 +641,15 @@
 
 <!-- ═══════════════ MOTIVATION SPLASH ═══════════════ -->
 <div class="modal-overlay" id="modalMotivation" style="align-items:center;justify-content:center">
-  <div style="background:rgba(10,10,10,0.97);border:1px solid rgba(185,205,220,0.18);border-radius:4px;
+  <div style="background:rgba(139,172,15,0.97);border:1px solid rgba(15,56,15,0.18);border-radius:4px;
     padding:36px 28px;margin:24px;text-align:center;
-    box-shadow:0 0 60px rgba(255,92,26,0.15);backdrop-filter:blur(30px);max-width:340px;width:100%">
-    <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--accent);margin-bottom:20px;letter-spacing:2px;text-shadow:-1px 0 rgba(255,60,80,0.6),1px 0 rgba(0,200,255,0.6)">&gt;&gt;&gt; READY &lt;&lt;&lt;</div>
+    max-width:340px;width:100%">
+    <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--accent);margin-bottom:20px;letter-spacing:2px;text-shadow:none;">&gt;&gt;&gt; READY &lt;&lt;&lt;</div>
     <div id="motivationText" style="font-family:'Press Start 2P',monospace;font-size:9px;
       color:var(--text);line-height:2.2;letter-spacing:0.5px;margin-bottom:28px;
-      text-shadow:-1px 0 rgba(255,60,80,0.5),1px 0 rgba(0,200,255,0.5)"></div>
-    <button onclick="closeModal('modalMotivation')" style="background:rgba(185,205,220,0.07);color:var(--accent);
-      border:1.5px solid rgba(185,205,220,0.35);border-radius:4px;padding:14px 24px;font-family:'Press Start 2P',monospace;
+      text-shadow:none;"></div>
+    <button onclick="closeModal('modalMotivation')" style="background:rgba(15,56,15,0.07);color:var(--accent);
+      border:1.5px solid rgba(15,56,15,0.35);border-radius:4px;padding:14px 24px;font-family:'Press Start 2P',monospace;
       font-size:8px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;width:100%">LOS GEHTS</button>
   </div>
 </div>
@@ -325,12 +684,12 @@
   </div>
   <div class="screen-content" id="workoutContent">
     <div class="empty-state" id="workoutEmpty" style="gap:0">
-      <p style="font-family:'Press Start 2P',monospace;font-size:11px;line-height:2.2;color:#fff;margin-bottom:16px">BEGINNE DEIN<br>WORKOUT</p>
+      <p style="font-family:'Press Start 2P',monospace;font-size:11px;line-height:2.2;color:var(--text);margin-bottom:16px">BEGINNE DEIN<br>WORKOUT</p>
       <!-- Pixel pull-up animation canvas -->
       <canvas id="pullupCanvas" width="120" height="160"
         style="image-rendering:pixelated;image-rendering:crisp-edges;margin-bottom:4px"></canvas>
       <button onclick="copyLastWorkoutToday()" id="copyLastBtn"
-        style="margin-top:12px;background:rgba(185,205,220,0.07);border:1.5px solid rgba(185,205,220,0.3);
+        style="margin-top:12px;background:rgba(15,56,15,0.07);border:1.5px solid rgba(15,56,15,0.3);
         border-radius:3px;color:var(--accent);padding:12px 20px;font-size:8px;font-family:'Press Start 2P',monospace;
         letter-spacing:1px;cursor:pointer;text-transform:uppercase;display:none">
         ⎘ LETZTES WORKOUT<br>KOPIEREN
@@ -365,7 +724,7 @@
 <div id="screen-exercises" class="screen">
   <div class="screen-header">
     <h1>Übungen</h1>
-    <button onclick="openAddExModal()" style="background:rgba(185,205,220,0.07);border:1.5px solid rgba(185,205,220,0.3);border-radius:3px;color:var(--accent);padding:7px 14px;font-size:9px;font-weight:400;font-family:var(--dot-font);letter-spacing:1px;cursor:pointer;text-transform:uppercase">+ NEU</button>
+    <button onclick="openAddExModal()" style="background:rgba(15,56,15,0.07);border:1.5px solid rgba(15,56,15,0.3);border-radius:3px;color:var(--accent);padding:7px 14px;font-size:9px;font-weight:400;font-family:var(--dot-font);letter-spacing:1px;cursor:pointer;text-transform:uppercase">+ NEU</button>
   </div>
   <div class="search-wrap" style="padding-bottom:0">
     <input type="search" class="search-input" id="exScreenSearch" placeholder="Übung suchen…" oninput="renderExScreen()">
@@ -408,266 +767,37 @@
 <!-- ═══════════════ MODAL: EXERCISE PICKER ═══════════════ -->
 <!-- CSS for muscle group picker -->
 <style>
-    /* ═══════════════════════════════════════════════
-       MODERN CYBER DESIGN SYSTEM
-       ═══════════════════════════════════════════════ */
-    :root {
-      --bg: #0b0e14;
-      --surface: rgba(23, 28, 36, 0.7);
-      --surface-bright: rgba(35, 41, 50, 0.85);
-      --primary: #00e5ff; /* Bright Cyan */
-      --primary-glow: rgba(0, 229, 255, 0.4);
-      --accent: #4fa3ff; /* Electric Blue */
-      --text: #f0f6fc;
-      --text-dim: #8b949e;
-      --border: rgba(255, 255, 255, 0.08);
-      --danger: #ff4d4d;
-      --success: #2ecc71;
-      --blur: blur(16px);
-    }
-
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      -webkit-tap-highlight-color: transparent; 
-      font-family: 'Inter', -apple-system, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 50% -20%, rgba(0, 229, 255, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 0% 100%, rgba(79, 163, 255, 0.08) 0%, transparent 40%);
-      background-attachment: fixed;
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .container { 
-      max-width: 500px; 
-      margin: 0 auto; 
-      padding: 20px; 
-      padding-bottom: 120px; 
-      width: 100%;
-    }
-
-    header {
-      padding: 30px 0 20px 0;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 25px;
-    }
-
-    h1 { 
-      font-size: 1.8rem; 
-      font-weight: 800; 
-      letter-spacing: -0.03em;
-      background: linear-gradient(to right, #fff, var(--primary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .retro-font { 
-      font-family: 'Press Start 2P', cursive; 
-      font-size: 0.65rem; 
-      color: var(--primary); 
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--surface);
-      backdrop-filter: var(--blur);
-      -webkit-backdrop-filter: var(--blur);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-
-    /* Inputs */
-    input, select {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: #fff;
-      padding: 14px;
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.3s ease;
-      margin-top: 5px;
-    }
-
-    input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-
-    label {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      font-weight: 600;
-      margin-left: 4px;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 24px;
-      border-radius: 14px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
-      gap: 10px;
-      font-size: 0.95rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #050505;
-      box-shadow: 0 4px 20px var(--primary-glow);
-      width: 100%;
-    }
-
-    .btn-primary:active { transform: scale(0.97); }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    /* Workout List Item */
-    .workout-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px;
-      background: var(--surface-bright);
-      border-radius: 16px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border);
-      transition: border-color 0.3s;
-    }
-    
-    .workout-item:hover {
-      border-color: var(--primary-glow);
-    }
-
-    /* Exercise & Set Layout */
-    .exercise-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .set-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.2fr auto;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-      background: rgba(255,255,255,0.03);
-      padding: 10px;
-      border-radius: 12px;
-    }
-
-    /* FAB */
-    #fab {
-      position: fixed;
-      bottom: 30px;
-      right: 25px;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 10px 25px var(--primary-glow);
-      z-index: 100;
-      border: none;
-      cursor: pointer;
-    }
-
-    /* Modals */
-    .modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(10px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: #161b22;
-      width: 100%;
-      max-width: 450px;
-      border-radius: 24px;
-      padding: 30px;
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    }
-
-    /* Timer */
-    #timerDisplay {
-      font-size: 4rem;
-      font-weight: 800;
-      text-align: center;
-      color: var(--primary);
-      text-shadow: 0 0 30px var(--primary-glow);
-      margin: 20px 0;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Tabs / Nav (if needed) */
-    .view-header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    /* Motivation */
-    #motivationText {
-      font-family: 'Press Start 2P', cursive;
-      line-height: 2;
-      color: var(--primary);
-      text-align: center;
-      font-size: 0.85rem;
-      padding: 20px 0;
-    }
-
-    /* Stats & Charts */
-    .stat-box {
-      background: rgba(255,255,255,0.05);
-      padding: 15px;
-      border-radius: 14px;
-      text-align: center;
-    }
-    .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
-    .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; }
-
-    /* Utilities */
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .mt-20 { margin-top: 20px; }
-    .hidden { display: none !important; }
+  .cat-group-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 16px;
+    border-bottom: 1px solid rgba(15,56,15,0.08);
+    cursor: pointer; transition: background 0.1s;
+    background: rgba(139,172,15,0.85);
+  }
+  .cat-group-item:active { background: rgba(15,56,15,0.08); }
+  .cat-group-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(15,56,15,0.07);
+    border: 1px solid rgba(15,56,15,0.18); border-radius: 3px;
+  }
+  .cat-group-name {
+    font-family: var(--dot-font); font-size: 10px;
+    color: var(--text); letter-spacing: 0.5px;
+  }
+  .cat-group-count {
+    font-family: var(--dot-font); font-size: 7px;
+    color: var(--text3); margin-top: 5px;
+  }
+  .cat-group-arrow {
+    margin-left: auto; font-size: 9px;
+    color: var(--text3); font-family: var(--dot-font);
+  }
+  .picker-back-btn {
+    background: none; border: none; color: var(--accent);
+    font-family: var(--dot-font); font-size: 8px;
+    letter-spacing: 0.5px; cursor: pointer; padding: 0;
+  }
 </style>
 
 <div class="modal-overlay" id="modalPicker">
@@ -703,7 +833,7 @@
         <option>Arme</option><option>Beine</option><option>Bauch</option><option>Sonstiges</option>
       </select>
       <div id="catPickerDisplay" onclick="toggleCatPicker()"
-        style="background:rgba(185,205,220,0.05);border:1px solid rgba(185,205,220,0.2);
+        style="background:rgba(15,56,15,0.05);border:1px solid rgba(15,56,15,0.2);
         border-radius:3px;color:var(--text);font-size:10px;font-family:var(--dot-font);
         padding:12px 13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
         letter-spacing:0.5px">
@@ -711,7 +841,7 @@
         <span style="color:var(--text3);font-size:8px">▼</span>
       </div>
       <div id="catPickerList" style="display:none;margin-top:4px;
-        background:rgba(4,6,9,0.98);border:1px solid rgba(185,205,220,0.2);border-radius:3px;overflow:hidden">
+        background:rgba(139,172,15,0.98);border:1px solid rgba(15,56,15,0.2);border-radius:3px;overflow:hidden">
       </div>
     </div>
     <div class="form-group">
@@ -736,7 +866,7 @@
       <button class="btn-close" onclick="closeModal('modalTimer')">×</button>
     </div>
     <div style="padding:20px 16px 8px;text-align:center">
-      <div id="timerModalDisplay" style="font-size:28px;font-weight:400;font-family:'Press Start 2P',monospace;letter-spacing:3px;line-height:1;color:var(--text);text-shadow:-2px 0 rgba(255,60,80,0.5),2px 0 rgba(0,200,255,0.5)">1:30</div>
+      <div id="timerModalDisplay" style="font-size:28px;font-weight:400;font-family:'Press Start 2P',monospace;letter-spacing:3px;line-height:1;color:var(--text);text-shadow:none;">1:30</div>
       <div id="timerModalSub" style="font-size:7px;color:var(--text3);margin-top:10px;font-family:'Press Start 2P',monospace;letter-spacing:2px;text-transform:uppercase">PAUSE</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 16px;justify-content:center" id="timerPresets">
@@ -753,15 +883,15 @@
         oninput="onTimerRangeChange()">
       <span style="font-size:11px;color:var(--text3)">5m</span>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid rgba(185,205,220,0.1);margin-top:4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid rgba(15,56,15,0.1);margin-top:4px">
       <div>
         <div style="font-family:var(--dot-font);font-size:8px;color:var(--text2);letter-spacing:0.5px">AUTO-START</div>
         <div style="font-family:var(--dot-font);font-size:6px;color:var(--text3);margin-top:5px;line-height:1.8">Startet nach jedem Satz</div>
       </div>
-      <button id="autoTimerToggle" onclick="toggleAutoTimer()" style="background:rgba(185,205,220,0.06);border:1.5px solid rgba(185,205,220,0.2);border-radius:3px;color:var(--text3);font-family:var(--dot-font);font-size:9px;padding:10px 16px;cursor:pointer;letter-spacing:1px;min-width:64px;transition:all 0.15s">AUS</button>
+      <button id="autoTimerToggle" onclick="toggleAutoTimer()" style="background:rgba(15,56,15,0.06);border:1.5px solid rgba(15,56,15,0.2);border-radius:3px;color:var(--text3);font-family:var(--dot-font);font-size:9px;padding:10px 16px;cursor:pointer;letter-spacing:1px;min-width:64px;transition:all 0.15s">AUS</button>
     </div>
     <div class="form-group" style="padding-top:10px;display:flex;gap:8px">
-      <button onclick="closeModal('modalTimer');skipTimer()" style="background:rgba(185,205,220,0.06);border:1.5px solid rgba(185,205,220,0.2);color:var(--text2);border-radius:3px;padding:13px 16px;font-size:8px;font-family:var(--dot-font);cursor:pointer;flex:0 0 auto;letter-spacing:0.5px">STOP</button>
+      <button onclick="closeModal('modalTimer');skipTimer()" style="background:rgba(15,56,15,0.06);border:1.5px solid rgba(15,56,15,0.2);color:var(--text2);border-radius:3px;padding:13px 16px;font-size:8px;font-family:var(--dot-font);cursor:pointer;flex:0 0 auto;letter-spacing:0.5px">STOP</button>
       <button class="btn-primary" id="timerStartBtn" onclick="startTimerFromModal()">STARTEN</button>
     </div>
   </div>
@@ -775,7 +905,7 @@
       <button class="btn-close" onclick="closeModal('modalDeleteSet')">X</button>
     </div>
     <div style="padding:16px;display:flex;gap:10px">
-      <button class="btn-primary" style="flex:1;background:rgba(220,80,80,0.12);border-color:rgba(220,80,80,0.4);color:#e08080"
+      <button class="btn-primary" style="flex:1;background:rgba(125,26,26,0.15);border-color:rgba(125,26,26,0.55);color:var(--red)"
         onclick="confirmDeleteSet()">JA</button>
       <button class="btn-primary" style="flex:1"
         onclick="closeModal('modalDeleteSet')">NEIN</button>
@@ -1011,7 +1141,7 @@ function renderWorkout() {
     const setsHTML = entry.sets.map((set, si) => {
       if (set.saved) {
         if (isBW) {
-          return `<div class="bw-set-row" style="background:rgba(185,205,220,0.04)" id="sr-${ei}-${si}"
+          return `<div class="bw-set-row" style="background:rgba(15,56,15,0.04)" id="sr-${ei}-${si}"
           oncontextmenu="event.preventDefault();openDeleteSet(${ei},${si})"
           ontouchstart="startLongPress(${ei},${si},event)" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
             <div class="set-num" style="color:var(--accent)">${si+1}</div>
@@ -1421,7 +1551,7 @@ function renderPickerExList() {
     e.category === pickerCat && e.name.toLowerCase().includes(q)
   );
   document.getElementById('pickerBody').innerHTML = exs.length
-    ? `<div class="cat-group-item" onclick="renderPickerCats()" style="border-bottom:2px solid rgba(185,205,220,0.1)">
+    ? `<div class="cat-group-item" onclick="renderPickerCats()" style="border-bottom:2px solid rgba(15,56,15,0.1)">
         <div style="font-family:var(--dot-font);font-size:8px;color:var(--text3)">&lt; ZURUECK</div>
       </div>` +
       exs.map(e => `<div class="ex-list-item" onclick="addExToWorkout('${e.id}')">
@@ -1707,6 +1837,8 @@ function copyWorkout(workoutId, evt) {
 // ═══════════════════════════════════════════════
 let timerInterval = null;
 let timerSecs = 0;
+let timerEndAt = 0;        // absolute timestamp (ms) when timer finishes - truth source
+let timerDoneFired = false; // guard so we fire done-effect only once
 let audioCtx = null;
 
 function getACtx() {
@@ -1767,7 +1899,10 @@ function playTimerDone() {
 
 function startTimer(secs) {
   stopTimer();
+  timerEndAt = Date.now() + secs * 1000;
+  timerDoneFired = false;
   timerSecs = secs;
+  try { localStorage.setItem('gl_timerEndAt', String(timerEndAt)); } catch(e) {}
   const el = document.getElementById('timerInline');
   const icon = document.getElementById('timerIconBtn');
   el.classList.remove('done');
@@ -1775,20 +1910,35 @@ function startTimer(secs) {
   if (icon) icon.style.display = 'none';
   updateTimerDisplay();
   closeModal('modalTimer');
-  timerInterval = setInterval(() => {
-    timerSecs--;
-    if (timerSecs <= 0) {
-      timerSecs = 0; updateTimerDisplay(); stopTimer();
-      playTimerDone();
-      el.classList.add('done');
-      setTimeout(() => {
-        el.classList.remove('active','done');
-        if (icon) icon.style.display = '';
-      }, 4000);
-    } else {
-      updateTimerDisplay();
-    }
-  }, 1000);
+  // Tick every 250ms for smoother display; true value always comes from timestamp
+  timerInterval = setInterval(tickTimer, 250);
+}
+
+function tickTimer() {
+  if (!timerEndAt) return;
+  const msLeft = timerEndAt - Date.now();
+  const newSecs = Math.max(0, Math.ceil(msLeft / 1000));
+  if (newSecs !== timerSecs) {
+    timerSecs = newSecs;
+    updateTimerDisplay();
+  }
+  if (msLeft <= 0 && !timerDoneFired) {
+    timerDoneFired = true;
+    timerSecs = 0;
+    updateTimerDisplay();
+    const el = document.getElementById('timerInline');
+    const icon = document.getElementById('timerIconBtn');
+    playTimerDone();
+    if (el) el.classList.add('done');
+    // Stop ticking
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    try { localStorage.removeItem('gl_timerEndAt'); } catch(e) {}
+    setTimeout(() => {
+      if (el) el.classList.remove('active','done');
+      if (icon) icon.style.display = '';
+      timerEndAt = 0;
+    }, 4000);
+  }
 }
 
 function stopTimer() {
@@ -1797,19 +1947,61 @@ function stopTimer() {
 
 function skipTimer() {
   stopTimer();
+  timerEndAt = 0;
+  timerDoneFired = false;
+  try { localStorage.removeItem('gl_timerEndAt'); } catch(e) {}
   const el = document.getElementById('timerInline');
   if (el) el.classList.remove('active','done');
   const icon = document.getElementById('timerIconBtn');
   if (icon) icon.style.display = '';
 }
 
-function addTimerTime(s) { timerSecs += s; updateTimerDisplay(); }
+function addTimerTime(s) {
+  if (!timerEndAt) { timerSecs += s; updateTimerDisplay(); return; }
+  timerEndAt += s * 1000;
+  try { localStorage.setItem('gl_timerEndAt', String(timerEndAt)); } catch(e) {}
+  timerSecs = Math.max(0, Math.ceil((timerEndAt - Date.now()) / 1000));
+  updateTimerDisplay();
+}
 
 function updateTimerDisplay() {
   const m = Math.floor(timerSecs/60), s = timerSecs%60;
   const str = `${m}:${s.toString().padStart(2,'0')}`;
-  document.getElementById('timerDisplay').textContent = str;
+  const el = document.getElementById('timerDisplay');
+  if (el) el.textContent = str;
 }
+
+// ── Handle returning from background / wake ──
+// setInterval is throttled (or paused) in background tabs on mobile,
+// so on every visibility change we re-sync immediately.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && timerEndAt) {
+    tickTimer();
+  }
+});
+window.addEventListener('focus', () => {
+  if (timerEndAt) tickTimer();
+});
+window.addEventListener('pageshow', () => {
+  if (timerEndAt) tickTimer();
+});
+
+// ── Restore timer across page reload / OS kill ──
+(function restoreTimer() {
+  try {
+    const saved = parseInt(localStorage.getItem('gl_timerEndAt') || '0', 10);
+    if (!saved) return;
+    const msLeft = saved - Date.now();
+    if (msLeft <= 0) {
+      // Already finished while app was closed - just clear it silently
+      localStorage.removeItem('gl_timerEndAt');
+      return;
+    }
+    // Resume countdown from where it left off
+    const remaining = Math.ceil(msLeft / 1000);
+    setTimeout(() => startTimer(remaining), 50);
+  } catch(e) {}
+})();
 
 // ═══════════════════════════════════════════════
 // TIMER MODAL (manuell)
@@ -1869,7 +2061,7 @@ function toggleAutoTimer() {
   if (tog) {
     tog.textContent = s.autoTimer ? 'AN' : 'AUS';
     tog.style.color = s.autoTimer ? 'var(--accent)' : 'var(--text3)';
-    tog.style.borderColor = s.autoTimer ? 'rgba(185,205,220,0.5)' : 'rgba(185,205,220,0.2)';
+    tog.style.borderColor = s.autoTimer ? 'rgba(15,56,15,0.5)' : 'rgba(15,56,15,0.2)';
   }
 }
 
@@ -1903,13 +2095,13 @@ function toast(msg) {
   const S = 5;
 
   const C = {
-    bar:  '#c8d8e4',
-    skin: '#aab0b0',
-    hair: '#d0d4d8',
-    top:  '#6e7a88',
-    pant: '#586070',
-    shoe: '#383e44',
-    acc:  '#bcc8d0',
+    bar:  '#0f380f',
+    skin: '#306230',
+    hair: '#0f380f',
+    top:  '#306230',
+    pant: '#0f380f',
+    shoe: '#0f380f',
+    acc:  '#8bac0f',
   };
 
   // Each rect: [x, y, w, h, colorKey]
