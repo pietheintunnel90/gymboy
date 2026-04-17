@@ -67,7 +67,6 @@
       background-size: 4px 4px;
     }
     body > * { position: relative; z-index: 1; }
-    /* faint LCD edge darkening */
     body::after {
       content: '';
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -523,7 +522,82 @@
     }
     .setting-label { font-size: 10px; font-weight: 400; font-family: var(--dot-font); letter-spacing: 0.5px; }
     .setting-sub { font-size: 8px; color: var(--text3); margin-top: 6px; font-family: var(--dot-font); letter-spacing: 0.3px; line-height: 1.8; }
-    input[type=range] { width: 130px; accent-color: var(--accent); }
+    /* Range sliders in Game Boy palette — track stays green instead of white */
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 130px; height: 20px;
+      background: transparent;
+      outline: none; cursor: pointer;
+      padding: 0;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 6px; border-radius: 2px;
+      background: linear-gradient(to right,
+        var(--gb-darkest) 0%,
+        var(--gb-darkest) var(--pct, 25%),
+        rgba(15,56,15,0.22) var(--pct, 25%),
+        rgba(15,56,15,0.22) 100%);
+      border: 1px solid rgba(15,56,15,0.35);
+    }
+    input[type=range]::-moz-range-track {
+      height: 6px; border-radius: 2px;
+      background: rgba(15,56,15,0.22);
+      border: 1px solid rgba(15,56,15,0.35);
+    }
+    input[type=range]::-moz-range-progress {
+      height: 6px; border-radius: 2px;
+      background: var(--gb-darkest);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 2px;
+      background: var(--gb-darkest);
+      border: 1px solid var(--gb-lightest);
+      box-shadow: 0 0 0 1px var(--gb-darkest);
+      margin-top: -7px;
+      cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 2px;
+      background: var(--gb-darkest);
+      border: 1px solid var(--gb-lightest);
+      box-shadow: 0 0 0 1px var(--gb-darkest);
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 6px; border-radius: 2px;
+      background: linear-gradient(to right,
+        var(--gb-darkest) 0%,
+        var(--gb-darkest) var(--pct, 25%),
+        rgba(15,56,15,0.22) var(--pct, 25%),
+        rgba(15,56,15,0.22) 100%);
+      border: 1px solid rgba(15,56,15,0.35);
+    }
+    input[type=range]::-moz-range-track {
+      height: 6px; border-radius: 2px;
+      background: rgba(15,56,15,0.22);
+      border: 1px solid rgba(15,56,15,0.35);
+    }
+    input[type=range]::-moz-range-progress {
+      height: 6px; border-radius: 2px;
+      background: var(--gb-darkest);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 2px;
+      background: var(--gb-darkest);
+      border: 1px solid var(--gb-lightest);
+      box-shadow: 0 0 0 1px var(--gb-darkest);
+      margin-top: -7px;
+      cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 2px;
+      background: var(--gb-darkest);
+      border: 1px solid var(--gb-lightest);
+      box-shadow: 0 0 0 1px var(--gb-darkest);
+      cursor: pointer;
+    }
     /* ── SLIDER OVERLAY ── */
     #sliderOverlay {
       position: fixed; left: 0; right: 0;
@@ -686,7 +760,7 @@
     <div class="empty-state" id="workoutEmpty" style="gap:0">
       <p style="font-family:'Press Start 2P',monospace;font-size:11px;line-height:2.2;color:var(--text);margin-bottom:16px">BEGINNE DEIN<br>WORKOUT</p>
       <!-- Pixel pull-up animation canvas -->
-      <canvas id="pullupCanvas" width="120" height="160"
+      <canvas id="ryuCanvas" width="144" height="80"
         style="image-rendering:pixelated;image-rendering:crisp-edges;margin-bottom:4px"></canvas>
       <button onclick="copyLastWorkoutToday()" id="copyLastBtn"
         style="margin-top:12px;background:rgba(15,56,15,0.07);border:1.5px solid rgba(15,56,15,0.3);
@@ -1837,8 +1911,8 @@ function copyWorkout(workoutId, evt) {
 // ═══════════════════════════════════════════════
 let timerInterval = null;
 let timerSecs = 0;
-let timerEndAt = 0;        // absolute timestamp (ms) when timer finishes - truth source
-let timerDoneFired = false; // guard so we fire done-effect only once
+let timerEndAt = 0;
+let timerDoneFired = false;
 let audioCtx = null;
 
 function getACtx() {
@@ -1910,7 +1984,6 @@ function startTimer(secs) {
   if (icon) icon.style.display = 'none';
   updateTimerDisplay();
   closeModal('modalTimer');
-  // Tick every 250ms for smoother display; true value always comes from timestamp
   timerInterval = setInterval(tickTimer, 250);
 }
 
@@ -1930,7 +2003,6 @@ function tickTimer() {
     const icon = document.getElementById('timerIconBtn');
     playTimerDone();
     if (el) el.classList.add('done');
-    // Stop ticking
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     try { localStorage.removeItem('gl_timerEndAt'); } catch(e) {}
     setTimeout(() => {
@@ -1971,35 +2043,19 @@ function updateTimerDisplay() {
   if (el) el.textContent = str;
 }
 
-// ── Handle returning from background / wake ──
-// setInterval is throttled (or paused) in background tabs on mobile,
-// so on every visibility change we re-sync immediately.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && timerEndAt) {
-    tickTimer();
-  }
+  if (document.visibilityState === 'visible' && timerEndAt) tickTimer();
 });
-window.addEventListener('focus', () => {
-  if (timerEndAt) tickTimer();
-});
-window.addEventListener('pageshow', () => {
-  if (timerEndAt) tickTimer();
-});
+window.addEventListener('focus',   () => { if (timerEndAt) tickTimer(); });
+window.addEventListener('pageshow', () => { if (timerEndAt) tickTimer(); });
 
-// ── Restore timer across page reload / OS kill ──
 (function restoreTimer() {
   try {
     const saved = parseInt(localStorage.getItem('gl_timerEndAt') || '0', 10);
     if (!saved) return;
     const msLeft = saved - Date.now();
-    if (msLeft <= 0) {
-      // Already finished while app was closed - just clear it silently
-      localStorage.removeItem('gl_timerEndAt');
-      return;
-    }
-    // Resume countdown from where it left off
-    const remaining = Math.ceil(msLeft / 1000);
-    setTimeout(() => startTimer(remaining), 50);
+    if (msLeft <= 0) { localStorage.removeItem('gl_timerEndAt'); return; }
+    setTimeout(() => startTimer(Math.ceil(msLeft / 1000)), 50);
   } catch(e) {}
 })();
 
@@ -2012,14 +2068,24 @@ function openTimerSettings() {
   const s = getSettings();
   timerModalSecs = s.timerDuration;
   document.getElementById('timerDurRange').value = timerModalSecs;
+  updateSliderFill();
   updateTimerModalDisplay();
   updatePresetHighlight();
   openModal('modalTimer');
 }
 
+function updateSliderFill() {
+  const el = document.getElementById('timerDurRange');
+  if (!el) return;
+  const min = parseFloat(el.min) || 0, max = parseFloat(el.max) || 100;
+  const pct = ((parseFloat(el.value) - min) / (max - min)) * 100;
+  el.style.setProperty('--pct', pct + '%');
+}
+
 function setTimerPreset(secs) {
   timerModalSecs = secs;
   document.getElementById('timerDurRange').value = secs;
+  updateSliderFill();
   updateTimerModalDisplay();
   updatePresetHighlight();
   const s = getSettings(); s.timerDuration = secs; saveSettings(s);
@@ -2027,6 +2093,7 @@ function setTimerPreset(secs) {
 
 function onTimerRangeChange() {
   timerModalSecs = parseInt(document.getElementById('timerDurRange').value);
+  updateSliderFill();
   updateTimerModalDisplay();
   updatePresetHighlight();
   const s = getSettings(); s.timerDuration = timerModalSecs; saveSettings(s);
@@ -2088,173 +2155,171 @@ function toast(msg) {
 
 
 // ═══════════════════════════════════════════════
-// PIXEL PULL-UP ANIMATION
 // ═══════════════════════════════════════════════
-(function initPullupAnimation() {
-  // Grid: 24 wide x 32 tall, scale 5 = 120x160 canvas
-  const S = 5;
-
-  const C = {
-    bar:  '#0f380f',
-    skin: '#306230',
-    hair: '#0f380f',
-    top:  '#306230',
-    pant: '#0f380f',
-    shoe: '#0f380f',
-    acc:  '#8bac0f',
+// PIXEL RYU HADOUKEN ANIMATION
+// ═══════════════════════════════════════════════
+(function() {
+  const S = 4;  // scale: 4 CSS-pixels per game-boy pixel
+  const COLORS = {
+    X: '#0f380f',  // darkest (outline, hair, eye, belt)
+    D: '#306230',  // dark (fill: face, gi)
+    F: '#0f380f',  // fireball outline (same as X)
+    G: '#306230'  // fireball fill (same as D)
   };
 
-  // Each rect: [x, y, w, h, colorKey]
-  // IMPORTANT: arms always overlap with shoulder region of torso
-  // so they appear visually connected
+  function parseFrame(rows) {
+    const px = [];
+    for (let y = 0; y < rows.length; y++) {
+      const row = rows[y];
+      for (let x = 0; x < row.length; x++) {
+        const ch = row[x];
+        if (ch !== '.' && ch !== ' ') px.push([x, y, ch]);
+      }
+    }
+    return px;
+  }
 
-  // Shared: pull-up bar (always same)
-  const BAR = [
-    [1, 0, 22, 2, 'bar'],     // horizontal bar
-    [4,  2, 2, 2, 'bar'],     // L support bar
-    [18, 2, 2, 2, 'bar'],     // R support bar
-  ];
+  // Ryu facing right. Grid 36 wide × 20 tall, scale 4 → canvas 144×80.
+  // Ryu body lives x=1..14, fireball travels x=15..35.
 
-  // ── FRAME 1: hanging, arms fully extended ──
-  const F1 = [
-    ...BAR,
-    // Hands gripping bar
-    [4, 4, 2, 2, 'skin'],   // L hand
-    [18, 4, 2, 2, 'skin'],  // R hand
-    // Arms (2px wide) - rows 6-13
-    [4, 6, 2, 8, 'skin'],   // L arm
-    [18, 6, 2, 8, 'skin'],  // R arm
-    // HEAD between arms (rows 6-11)
-    [9, 6, 6, 5, 'skin'],   // head
-    [8, 5, 8, 2, 'hair'],   // hair top
-    [13, 4, 6, 2, 'hair'],  // ponytail
-    [13, 4, 1, 1, 'acc'],   // bow
-    [10, 8, 2, 1, 'shoe'],  // L eye
-    [14, 8, 2, 1, 'shoe'],  // R eye
-    [11, 10, 3, 1, 'shoe'], // mouth
-    // SHOULDERS - wide row, overlaps bottom of arms → connection!
-    [4, 14, 16, 2, 'top'],  // full shoulder width connects both arms
-    // Torso
-    [8, 16, 8, 6, 'top'],
-    // Waist
-    [9, 22, 6, 2, 'skin'],
-    // Shorts
-    [7, 24, 10, 3, 'pant'],
-    // Legs
-    [7, 27, 4, 4, 'skin'],   // L leg
-    [13, 27, 4, 4, 'skin'],  // R leg
-    [6, 30, 5, 2, 'shoe'],   // L shoe
-    [13, 30, 5, 2, 'shoe'],  // R shoe
-  ];
+  // F1 — neutral fighting stance
+  const F1 = parseFrame([
+    "....................................",
+    "....................................",
+    "....XXX.............................",
+    "...XXXXXXX..........................",
+    "..XDDDDDDDX.........................",
+    "..XD.X.X.DX.........................",
+    "..XDDDDDDDX.........................",
+    "...XDDDDDX..........................",
+    "...XDDDDDX..........................",
+    "..XDDDDDDDX.........................",
+    "..XDDDDDDDDDX.......................",
+    "..XDDDDDDDDDDX......................",
+    "..XDDDDDDDDDX.......................",
+    "..XXXXXXXXXX........................",
+    "...XDDDDDDDX........................",
+    "...XDDDDDDDX........................",
+    "...XDDX.XDDX........................",
+    "..XDDX...XDDX.......................",
+    "..XXX.....XXX.......................",
+    "...................................."
+  ]);
 
-  // ── FRAME 2: 1/3 up - arms slightly bent ──
-  const F2_OFFSET = 3; // body up by 3 units
-  const F2 = [
-    ...BAR,
-    [4, 4, 2, 2, 'skin'],   // L hand
-    [18, 4, 2, 2, 'skin'],  // R hand
-    // Arms bent slightly - upper arm + angled section
-    [4, 6, 2, 5, 'skin'],   // L upper arm
-    [4, 11, 5, 2, 'skin'],  // L forearm angling in
-    [18, 6, 2, 5, 'skin'],  // R upper arm
-    [15, 11, 5, 2, 'skin'], // R forearm angling in
-    // Head (raised 3)
-    [9, 3, 6, 5, 'skin'],
-    [8, 2, 8, 2, 'hair'],
-    [13, 1, 6, 2, 'hair'],
-    [13, 1, 1, 1, 'acc'],
-    [10, 5, 2, 1, 'shoe'],
-    [14, 5, 2, 1, 'shoe'],
-    [11, 7, 3, 1, 'shoe'],
-    // Shoulders - OVERLAPPING arm ends
-    [4, 13, 16, 2, 'top'],
-    // Torso (raised 3)
-    [8, 15, 8, 5, 'top'],
-    [9, 20, 6, 2, 'skin'],
-    [7, 22, 10, 3, 'pant'],
-    [7, 25, 4, 3, 'skin'],
-    [13, 25, 4, 3, 'skin'],
-    [6, 28, 5, 2, 'shoe'],
-    [13, 28, 5, 2, 'shoe'],
-  ];
+  // F2 — charge: body rotates back, both hands to left/back hip, energy ball forming
+  const F2 = parseFrame([
+    "....................................",
+    "....................................",
+    "......XXX...........................",
+    ".....XXXXXXX........................",
+    "....XDDDDDDDX.......................",
+    "....XD.X.X.DX.......................",
+    "....XDDDDDDDX.......................",
+    ".....XDDDDDX........................",
+    ".....XDDDDDX........................",
+    "...XDDDDDDDDDX......................",
+    "...XDDDDDDDDX.......................",
+    ".FFXDDDDDDDX........................",
+    "FGGFDDDDDDX.........................",
+    "FGGGFXXXXXX.........................",
+    "FGGFDDDDDDX.........................",
+    ".FFXDDDDDDDX........................",
+    "...XDDXXXDDX........................",
+    "..XDDX...XDDX.......................",
+    "..XXX.....XXX.......................",
+    "...................................."
+  ]);
 
-  // ── FRAME 3: 2/3 up - arms at ~90° ──
-  const F3 = [
-    ...BAR,
-    [4, 4, 2, 2, 'skin'],
-    [18, 4, 2, 2, 'skin'],
-    // Arms: upper arm goes outward, forearm near horizontal
-    [3, 4, 2, 4, 'skin'],   // L upper arm going out-down
-    [3, 8, 8, 2, 'skin'],   // L forearm horizontal
-    [19, 4, 2, 4, 'skin'],  // R upper arm
-    [13, 8, 8, 2, 'skin'],  // R forearm
-    // Head high (raised 6)
-    [9, 1, 6, 5, 'skin'],
-    [8, 0, 8, 2, 'hair'],
-    [13, 0, 6, 1, 'hair'],
-    [13, 0, 1, 1, 'acc'],
-    [10, 2, 2, 1, 'shoe'],
-    [14, 2, 2, 1, 'shoe'],
-    [11, 4, 3, 1, 'shoe'],
-    // Shoulders connecting to forearms
-    [3, 10, 18, 2, 'top'],
-    [8, 12, 8, 5, 'top'],
-    [9, 17, 6, 2, 'skin'],
-    [7, 19, 10, 3, 'pant'],
-    // Legs slightly bent/raised
-    [7, 22, 4, 3, 'skin'],
-    [13, 22, 4, 3, 'skin'],
-    [8, 25, 3, 2, 'skin'],
-    [13, 25, 3, 2, 'skin'],
-    [7, 27, 5, 2, 'shoe'],
-    [13, 27, 5, 2, 'shoe'],
-  ];
+  // F3 — release: torso leans forward, arms thrust forward, fireball emerging
+  const F3 = parseFrame([
+    "....................................",
+    "....................................",
+    "..XXXX..............................",
+    "..XXXXXXX...........................",
+    ".XDDDDDDDX..........................",
+    ".XDD.XX.DX..........................",
+    ".XDDDDDDDX..........................",
+    ".XDDDDDDDX..........................",
+    "..XDDDDDX...........................",
+    "..XDDDDDDDDDDDX.....................",
+    "..XDDDDDDDDDDDDDFFF.................",
+    "..XDDDDDDDDDDDDDFGGF................",
+    "..XDDDDDDDDDDDDDFGGGF...............",
+    "..XXXXXXXXXXX...FGGF................",
+    "..XDDDDDDDDDX....FFF................",
+    ".XDDDDDDDDDDDX......................",
+    ".XDDX....XDDX.......................",
+    "XDDX......XDDX......................",
+    "XXX........XXXX.....................",
+    "...................................."
+  ]);
 
-  // ── FRAME 4: TOP - chin at bar, arms fully bent ──
-  const F4 = [
-    ...BAR,
-    [4, 4, 2, 2, 'skin'],
-    [18, 4, 2, 2, 'skin'],
-    // Arms: fully bent - upper arm goes far out and down, forearm nearly horizontal
-    [2, 4, 2, 5, 'skin'],   // L upper arm (wide)
-    [2, 9, 9, 2, 'skin'],   // L forearm (all the way in)
-    [20, 4, 2, 5, 'skin'],  // R upper arm
-    [13, 9, 9, 2, 'skin'],  // R forearm
-    // Head at bar level
-    [9, 1, 6, 5, 'skin'],
-    [8, 0, 8, 2, 'hair'],
-    [13, 0, 5, 1, 'hair'],
-    [13, 0, 1, 1, 'acc'],
-    [10, 2, 2, 1, 'shoe'],
-    [14, 2, 2, 1, 'shoe'],
-    [11, 4, 3, 1, 'shoe'],
-    // Shoulders at forearm level
-    [2, 11, 20, 2, 'top'],
-    [8, 13, 8, 5, 'top'],
-    [9, 18, 6, 2, 'skin'],
-    [7, 20, 10, 3, 'pant'],
-    // Legs bent and raised
-    [6, 23, 4, 4, 'skin'],
-    [14, 23, 4, 4, 'skin'],
-    [5, 26, 5, 2, 'shoe'],
-    [13, 26, 5, 2, 'shoe'],
-  ];
+  // F4 — fireball mid-flight, Ryu still in extended pose
+  const F4 = parseFrame([
+    "....................................",
+    "....................................",
+    "..XXXX..............................",
+    "..XXXXXXX...........................",
+    ".XDDDDDDDX..........................",
+    ".XDD.XX.DX..........................",
+    ".XDDDDDDDX..........................",
+    ".XDDDDDDDX..........................",
+    "..XDDDDDX...........................",
+    "..XDDDDDDDDDDDX.....................",
+    "..XDDDDDDDDDDDDX......FFFF..........",
+    "..XDDDDDDDDDDDDX.....FGGGGF.........",
+    "..XDDDDDDDDDDDDX....FGGGGGGF........",
+    "..XXXXXXXXXXX........FGGGGF.........",
+    "..XDDDDDDDDDX.........FFFF..........",
+    ".XDDDDDDDDDDDX......................",
+    ".XDDX....XDDX.......................",
+    "XDDX......XDDX......................",
+    "XXX........XXXX.....................",
+    "...................................."
+  ]);
 
-  const FRAMES = [F1, F2, F3, F4, F3, F2];
-  const DELAYS = [700, 280, 280, 600, 280, 280];
+  // F5 — fireball exiting right edge, Ryu recovering toward neutral
+  const F5 = parseFrame([
+    "....................................",
+    "....................................",
+    "....XXX.............................",
+    "...XXXXXXX..........................",
+    "..XDDDDDDDX.........................",
+    "..XD.X.X.DX.........................",
+    "..XDDDDDDDX.........................",
+    "...XDDDDDX..........................",
+    "...XDDDDDX..........................",
+    "..XDDDDDDDX.........................",
+    "..XDDDDDDDDDX.......................",
+    "..XDDDDDDDDDDX................FFF...",
+    "..XDDDDDDDDDDX...............FGGGF..",
+    "..XXXXXXXXXXX.................FFF...",
+    "...XDDDDDDDX........................",
+    "...XDDDDDDDX........................",
+    "...XDDX.XDDX........................",
+    "..XDDX...XDDX.......................",
+    "..XXX.....XXX.......................",
+    "...................................."
+  ]);
+
+  const FRAMES = [F1, F2, F3, F4, F5];
+  //             neutral charge release fly  recover
+  const DELAYS = [ 700,   180,    130,  260,  420 ];
 
   let frameIdx = 0;
   let timer = null;
 
   function draw() {
-    const canvas = document.getElementById('pullupCanvas');
+    const canvas = document.getElementById('ryuCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    FRAMES[frameIdx].forEach(([x, y, w, h, k]) => {
-      ctx.fillStyle = C[k];
-      ctx.fillRect(x * S, y * S, w * S, h * S);
-    });
+    const frame = FRAMES[frameIdx];
+    for (let i = 0; i < frame.length; i++) {
+      const p = frame[i];
+      ctx.fillStyle = COLORS[p[2]];
+      ctx.fillRect(p[0] * S, p[1] * S, S, S);
+    }
     const delay = DELAYS[frameIdx];
     frameIdx = (frameIdx + 1) % FRAMES.length;
     timer = setTimeout(draw, delay);
@@ -2303,6 +2368,7 @@ function showMotivationIfNeeded() {
   const dur = s.timerDuration || 90;
   document.getElementById('timerDurRange').value = dur;
   timerModalSecs = dur;
+  updateSliderFill();
   updateTimerModalDisplay();
 
   // Ensure exercise DB is seeded
